@@ -1,1 +1,3 @@
-# Cinema app (in progress...)
+# Cinema app 
+
+- some description of project
