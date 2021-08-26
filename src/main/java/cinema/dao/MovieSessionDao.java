@@ -7,9 +7,13 @@ import java.util.Optional;
 import cinema.model.MovieSession;
 
 public interface MovieSessionDao {
-    List<MovieSession> findAvailableSessions(Long movieId, LocalDate date);
+    MovieSession add(MovieSession movieSession);
 
     Optional<MovieSession> get(Long id);
 
-    MovieSession add(MovieSession session);
+    List<MovieSession> findAvailableSessions(Long movieId, LocalDate date);
+
+    MovieSession update(MovieSession movieSession);
+
+    void delete(Long id);
 }

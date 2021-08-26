@@ -3,15 +3,18 @@ package cinema.service.impl;
 import java.util.List;
 
 import cinema.dao.CinemaHallDao;
-import cinema.lib.Inject;
-import cinema.lib.Service;
+import cinema.exception.DataProcessingException;
 import cinema.model.CinemaHall;
 import cinema.service.CinemaHallService;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CinemaHallServiceImpl implements CinemaHallService {
-    @Inject
-    private CinemaHallDao cinemaHallDao;
+    private final CinemaHallDao cinemaHallDao;
+
+    public CinemaHallServiceImpl(CinemaHallDao cinemaHallDao) {
+        this.cinemaHallDao = cinemaHallDao;
+    }
 
     @Override
     public CinemaHall add(CinemaHall cinemaHall) {
@@ -20,7 +23,8 @@ public class CinemaHallServiceImpl implements CinemaHallService {
 
     @Override
     public CinemaHall get(Long id) {
-        return cinemaHallDao.get(id).get();
+        return cinemaHallDao.get(id).orElseThrow(
+                () -> new DataProcessingException("Can't get cinema hall by id " + id));
     }
 
     @Override

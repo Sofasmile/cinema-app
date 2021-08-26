@@ -1,53 +1,37 @@
 package cinema.dao.impl;
 
+import java.util.List;
+
+import cinema.dao.AbstractDao;
 import cinema.dao.OrderDao;
 import cinema.exception.DataProcessingException;
-import cinema.lib.Dao;
-import cinema.model.User;
-import cinema.util.HibernateUtil;
 import cinema.model.Order;
-import java.util.List;
+import cinema.model.User;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
+import org.springframework.stereotype.Repository;
 
-@Dao
-public class OrderDaoImpl implements OrderDao {
-    @Override
-    public Order add(Order order) {
-        Session session = null;
-        Transaction transaction = null;
-        try {
-            session = HibernateUtil.getSessionFactory().openSession();
-            transaction = session.beginTransaction();
-            session.save(order);
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
-            throw new DataProcessingException("Can't save order: " + order + " to DB!", e);
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-        return order;
+@Repository
+public class OrderDaoImpl extends AbstractDao<Order> implements OrderDao {
+    public OrderDaoImpl(SessionFactory factory) {
+        super(factory, Order.class);
     }
 
     @Override
-    public List<Order> getOrdersByUser(User user) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            return session.createQuery("FROM Order o "
-                    + "JOIN FETCH o.user u "
-                    + "JOIN FETCH o.tickets t "
-                    + "JOIN FETCH t.movieSession ms "
-                    + "JOIN FETCH ms.movie "
-                    + "JOIN FETCH ms.cinemaHall "
-                    + "WHERE o.user = :user ", Order.class)
-                    .setParameter("user", user)
-                    .getResultList();
+    public List<Order> getOrdersHistory(User user) {
+        try (Session session = factory.openSession()) {
+            Query<Order> getByUser = session.createQuery(
+                    "SELECT DISTINCT o FROM orders o "
+                            + "join fetch o.tickets t "
+                            + "left join fetch t.movieSession ms "
+                            + "left join fetch ms.cinemaHall "
+                            + "left join fetch ms.movie "
+                            + "WHERE o.user = :user", Order.class);
+            getByUser.setParameter("user", user);
+            return getByUser.getResultList();
         } catch (Exception e) {
-            throw new DataProcessingException("Can't get orders by user: " + user + " from DB!", e);
+            throw new DataProcessingException("Not found shopping cart for user " + user, e);
         }
     }
 }
